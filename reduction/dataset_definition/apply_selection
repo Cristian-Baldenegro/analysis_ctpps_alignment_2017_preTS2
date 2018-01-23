@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for f in per_fill/*.json
+do
+	f_out=${f#*/}
+	f_out="per_fill_selected/$f_out"
+
+	echo "$f --> $f_out"
+
+	compareJSON.py --and "$f" "combined_RPIN_CMS.json" "$f_out"
+done

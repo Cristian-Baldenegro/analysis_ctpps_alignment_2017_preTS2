@@ -1,0 +1,53 @@
+#!/bin/bash
+
+function GetOne()
+{
+	local fill="$1"
+	local xangle="$2"
+	local ds="$3"
+	local search="$4"
+
+	# make work directory
+	local dir="$top_dir/fill_$fill/xangle_$xangle/$ds/"
+	mkdir -p "$dir"
+
+	# get input files
+	input_files=""
+	for f in `eos ls "$eos_dir"|grep "$search"|grep ".root"`
+	do
+		if [ -n "$input_files" ]
+		then
+			input_files="$input_files,\n"
+		fi
+
+		input_files="${input_files}    \"root://eostotem.cern.ch/${eos_dir}/${f}\""
+	done
+
+	# make config with input files
+	(
+		echo "import FWCore.ParameterSet.Config as cms"
+		echo ""
+		echo "input_files = cms.vstring("
+		echo -e "$input_files"
+		echo ")"
+	) > "$dir/input_files.py"
+
+	# if not present, make (default) config
+	if [ ! -f "$dir/config.py" ]
+	then
+		cp "config_template.py" "$dir/config.py"
+	fi
+}
+
+# alignment run May 2017
+top_dir="../data/alig"
+eos_dir="/eos/totem/data/ctpps/reconstruction/2017/alignment_run_May/version1"
+GetOne "5685" "150" "DS1" "run_294736\|run_294737\|run_294739"
+GetOne "5685" "120" "DS1" "run_294741"
+
+# alignment run July 2017
+top_dir="../data/alig"
+eos_dir="/eos/totem/data/ctpps/reconstruction/2017/alignment_run_July/version6"
+GetOne "5912" "140" "DS1" "run_298593"
+GetOne "5912" "130" "DS1" "run_298594\|run_298596"
+GetOne "5912" "120" "DS1" "run_298597"

@@ -1,0 +1,8 @@
+1. process the xangle_tillTS2.csv file
+	make && ./parse_xangle
+
+2. apply RP in & CMS selection
+	./apply_selection
+
+3. build reduction jobs
+	./build_jobs

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+pattern=""
+
+function GetOneRun()
+{
+	local run="$1"
+
+	(
+
+	for dataset in `das_client --limit=0 --query "dataset dataset=$pattern" | grep "Nov"`
+	do
+		result=`das_client --limit=0 --query "file dataset=$dataset run=$run | sum(file.nevents)"`
+		events="${result#*=}"
+
+		echo "$dataset,$events"
+	done
+
+	) &> "reco_info_$run"
+}
+
+
+pattern="/*/Run2017B-*/MINIAOD"
+
+#GetOneRun "299062" &
+
+pattern="/*/Run2017C-*/MINIAOD"
+
+GetOneRun "300155" &

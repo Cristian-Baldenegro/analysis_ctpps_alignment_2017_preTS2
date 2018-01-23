@@ -1,0 +1,198 @@
+#!/bin/bash
+
+streams=(
+	"SingleMuon"
+	"DoubleEG"
+	"ZeroBias"
+)
+
+template_file="job_template.py"
+check_template_file="CheckRootFile_template"
+
+config_file="cfg.py"
+log_file="log"
+job_log_file="job_log"
+check_file="CheckRootFile.cc"
+finished_file="finished"
+success_file="success"
+
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+
+function MakeConfig()
+{
+	(
+		echo "#!/bin/sh"
+		echo "export HOME=\"/afs/cern.ch/exp/totem/scratch/jkaspar\""
+		echo ""
+		echo "source \"/cvmfs/cms.cern.ch/cmsset_default.sh\""
+		echo "cd \"$CMSSW_BASE\""
+		echo "cmsenv"
+		echo "cd \"$execute_dir\""
+		echo ""
+		echo "# EOS configuration"
+		echo "#source \"/afs/cern.ch/project/eos/installation/totem/etc/setup.sh\""
+		echo "#shopt -s expand_aliases"
+		echo ""
+		echo "# grid proxy configuration"
+		echo "export X509_USER_PROXY=\"/afs/cern.ch/user/j/jkaspar/x509up_u2177\""
+		echo ""
+		cat "common_job_code"
+		echo ""
+		echo "("
+		echo ""
+		echo "date"
+		echo ""
+		echo "voms-proxy-info"
+		echo ""
+		echo "# prepare directory for reco"
+		echo "mkdir -p \"$reco_dir\""
+		echo ""
+		echo "# run CMSSW"
+		echo "cmsRun \"$config_file\" > \"$log_file\""
+		echo "cmsRun_retCode=\$?"
+		echo "if [ \$cmsRun_retCode -ne 0 ]"
+		echo "then"
+		echo "    echo \"cmsRun crashed: return code = \$cmsRun_retCode\""
+		echo "    ls -l > \"$finished_file\""
+		echo "    exit 1"
+		echo "fi"
+		echo ""
+		echo "date"
+		echo ""
+		echo "# check ROOT file consistency"
+		echo "root -b -q -l \"$check_file\" 2> /dev/null"
+		echo "if [ \$? -eq 0 ]"
+		echo "then"
+		echo "    # workaround for problems with eos cp"
+		echo "    export LD_LIBRARY_PATH=\"\""
+		echo "    "
+		echo "    success=1"
+		echo "    outputDir=\"$storage_dir\""
+		echo "    RemoteMkdir \"\$outputDir\""
+    	echo "    SafeCmd RemoteCopy \"$config_file\" \"\$outputDir/${output_tag}_cfg.py\" || success=0"
+    	echo "    SafeCmd RemoteCopy \"$log_file\" \"\$outputDir/${output_tag}.log\" || success=0"
+    	echo "    SafeCmd RemoteCopy \"run_ls_selection.json\" \"\$outputDir/${output_tag}.json\" || success=0"
+    	echo "    SafeCmd RemoteCopy \"$output_file\" \"\$outputDir/${output_tag}.root\" || success=0"
+		echo "    if [ \$success -eq 1 ]"
+		echo "    then"
+		echo "        touch \"$success_file\""
+		echo "    fi"
+		echo "else"
+		echo "    echo \"The reco file is corrupted, you will need to rerun this job.\""
+		echo "fi"
+		echo ""
+		echo "ls -l > \"$finished_file\""
+		echo ""
+		echo ") &> $job_log_file"
+	) > "$dir_out/job"
+
+	chmod u+x "$dir_out/job"
+}
+
+#----------------------------------------------------------------------------------------------------
+
+function MakeScript()
+{
+	cat "$template_file" | sed -e "\
+			s|\$input_files|$input_files|;\
+			s|\$output_file|$output_file|;\
+		" > "$dir_out/$config_file"
+}
+
+#----------------------------------------------------------------------------------------------------
+
+function MakeCheckScript()
+{
+    cat "$check_template_file" | sed "\
+        s|\$file|$output_file|;\
+      " > "$dir_out/$check_file"
+}
+
+#----------------------------------------------------------------------------------------------------
+
+function ProcessOne()
+{
+	dir_out="../work_dir/fill$fill/xangle$xangle/$stream"
+
+	mkdir -p "$dir_out"
+
+	# TODO: uncomment if needed
+###   	# copy json file
+###   	cp "$f_in" "$dir_out/run_ls_selection.json"
+###   
+###   	# extract run list
+###   	runs=`grep -o '".*"' "$dir_out/run_ls_selection.json" | sed 's/"//g'`
+###   	run_list=""
+###   	for run in $runs
+###   	do
+###   		if [ -n "$run_list" ]
+###   		then
+###   			run_list="$run_list, "
+###   		fi
+###   
+###   		run_list="$run_list$run"
+###   	done
+###   
+###   	# query list of files
+###   	f_files="$dir_out/input_files"
+###   	rm -f "$f_files"
+###   	das_client --query "file dataset=/$stream/Run2017B-17Nov2017-v1/MINIAOD run in [$run_list]" --limit=0 >> "$f_files"
+###   	das_client --query "file dataset=/$stream/Run2017C-17Nov2017-v1/MINIAOD run in [$run_list]" --limit=0 >> "$f_files"
+###   	das_client --query "file dataset=/$stream/Run2017D-17Nov2017-v1/MINIAOD run in [$run_list]" --limit=0 >> "$f_files"
+
+	# process input files
+	input_files=""
+	for file in `cat "$dir_out/input_files"`
+	do
+		input_files="$input_files\"$file\",\n"
+	done
+
+	# set directories, filenames, etc.
+	execute_dir="`pwd -P`/$dir_out"
+	reco_dir="/pool"
+
+	storage_dir="/eos/totem/data/ctpps/reconstruction/2017/preTS2_alignment_data/version1"
+
+	output_file="$reco_dir/fill${fill}_xangle${xangle}_$stream.root"
+	output_tag="fill${fill}_xangle${xangle}_$stream"
+
+	# make config
+	MakeConfig
+
+	# make job script
+	MakeScript
+
+	# make check script
+	MakeCheckScript
+}
+
+#----------------------------------------------------------------------------------------------------
+
+for f_in in per_fill_selected/*
+do
+	size=$(wc -c <"$f_in")
+
+	if [ "$size" -le 3 ]
+	then
+		continue
+	fi
+	
+	echo "$f_in"
+
+	tag=${f_in#*/}
+	tag=${tag%.*}
+
+	fill=${tag%_*}
+	fill=${fill#fill}
+
+	xangle=${tag#*_}
+	xangle=${xangle#xangle}
+
+	for stream in ${streams[*]}
+	do
+		ProcessOne &
+	done
+
+	wait
+done
