@@ -104,20 +104,32 @@ make "$src_file" || exit 2
 #----------------------------------------------------------------------------------------------------
 # execute
 
+function ExecuteOneWithStatus()
+{
+	echo "* $label: running"
+
+	cd "$d"
+	"$cwd/$src_file" $run_options &> "$src_file.log"
+	if [ $? -ne 0 ]
+	then
+		echo "* $label: run error"
+	else
+		echo "* $label: done"
+	fi
+	cd - > /dev/null
+}
+
 function ExecuteOne()
 {
-	local dir="$1"
+	dir="$1"
 
-	local cwd="`pwd -P`"
+	cwd="`pwd -P`"
+
+	label="'$src_file' in '$d'"
 
 	if [ "$lxbatch" == "n" ]
 	then
-		echo "* '$src_file' in '$d': running"
-	
-		cwd=`pwd -P`
-		cd "$d"
-		"$cwd/$src_file" $run_options &> "$src_file.log" &
-		cd - > /dev/null
+		ExecuteOneWithStatus &
 	else
 		cat "job_template" | sed " \
 				s|\$CMSSW_BASE|$CMSSW_BASE|;\
@@ -131,9 +143,9 @@ function ExecuteOne()
 		if [ "$submit" == "y" ]
 		then
 			result=`bsub -R "$bsub_options" -q "$bsub_queue" -o /dev/null -e /dev/null "$cwd/$dir/.$src_file.job"`
-			echo "* '$src_file' in '$d': $result"
+			echo "* $label: $result"
 		else
-			echo "* '$src_file' in '$d': would be submitted ($bsub_queue)"
+			echo "* $label: would be submitted ($bsub_queue)"
 		fi
 	fi
 }
