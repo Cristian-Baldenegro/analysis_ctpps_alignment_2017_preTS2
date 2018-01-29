@@ -197,7 +197,7 @@ int main()
 		ev_count++;
 
 		// TODO: comment out
-		if (tr_sel_count > 10000)
+		if (tr_sel_count > 1000000)
 			break;
 
 		// default track data
@@ -214,17 +214,25 @@ int main()
 			CTPPSDetId rpId(tr.getRPId());
 			unsigned int rpDecId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();
 
-			if (rpDecId == 23)
-				tr_L_2_F = tr;
-			if (rpDecId == 3)
-				tr_L_1_F = tr;
-			if (rpDecId == 103)
-				tr_R_1_F = tr;
-			if (rpDecId == 123)
-				tr_R_2_F = tr;
-		}
+			CTPPSLocalTrackLite *dest = NULL;
 
-		// TODO: apply alignment corrections
+			if (rpDecId == 23)
+				dest = &tr_L_2_F;
+			if (rpDecId == 3)
+				dest = &tr_L_1_F;
+			if (rpDecId == 103)
+				dest = &tr_R_1_F;
+			if (rpDecId == 123)
+				dest = &tr_R_2_F;
+
+			if (dest == NULL)
+				continue;
+
+			*dest = CTPPSLocalTrackLite(tr.getRPId(),
+					tr.getX() + cfg.alignment_corrections_x[rpDecId], tr.getXUnc(),
+					tr.getY(), tr.getYUnc()
+				);
+		}
 
 		bool tr_L_2_F_valid = (tr_L_2_F.getRPId() != 0);
 		bool tr_L_1_F_valid = (tr_L_1_F.getRPId() != 0);
