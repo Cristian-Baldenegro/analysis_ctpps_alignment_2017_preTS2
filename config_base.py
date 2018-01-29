@@ -46,26 +46,26 @@ config = cms.PSet(
       rp_L_2_F = cms.PSet(
         x_min = cms.double(0.),
         x_max = cms.double(0.),
-        sh_min = cms.double(0.),
-        sh_max = cms.double(0.)
+        sh_min = cms.double(-44),
+        sh_max = cms.double(-40)
       ),
       rp_L_1_F = cms.PSet(
         x_min = cms.double(0.),
         x_max = cms.double(0.),
-        sh_min = cms.double(0.),
-        sh_max = cms.double(0.)
+        sh_min = cms.double(-5),
+        sh_max = cms.double(-1)
       ),
       rp_R_1_F = cms.PSet(
         x_min = cms.double(0.),
         x_max = cms.double(0.),
-        sh_min = cms.double(0.),
-        sh_max = cms.double(0.)
+        sh_min = cms.double(-5),
+        sh_max = cms.double(-1)
       ),
       rp_R_2_F = cms.PSet(
         x_min = cms.double(0.),
         x_max = cms.double(0.),
-        sh_min = cms.double(0.),
-        sh_max = cms.double(0.)
+        sh_min = cms.double(-44),
+        sh_max = cms.double(-40)
       )
     )
 )
