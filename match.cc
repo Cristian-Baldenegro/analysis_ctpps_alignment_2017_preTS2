@@ -436,6 +436,7 @@ int main()
 	printf("--------------------------------------------------\n");
 
 	// list of RPs and their settings
+	// TODO: remove unused data?
 	struct RPData
 	{
 		string name;
@@ -445,10 +446,10 @@ int main()
 	};
 
 	vector<RPData> rpData = {
-		{ "L_2_F", 3,   -70, 0, 130 },
-		{ "L_1_F", 2,   -10, 0, 130 },
-		{ "R_1_F", 102, -10, 0, 130 },
-		{ "R_2_F", 103, -70, 0, 130 }
+		{ "L_2_F", 23,   -70, 0, 130 },
+		{ "L_1_F", 3,   -10, 0, 130 },
+		{ "R_1_F", 103, -10, 0, 130 },
+		{ "R_2_F", 123, -70, 0, 130 }
 	};
 
 	// get input

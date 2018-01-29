@@ -58,10 +58,10 @@ struct Config
 int Config::LoadFrom(const string &f_in)
 {
 	map<unsigned int, string> rp_tags = {
-		{ 3, "L_2_F" },
-		{ 2, "L_1_F" },
-		{ 102, "R_1_F" },
-		{ 103, "R_2_F" }
+		{ 23, "L_2_F" },
+		{ 3, "L_1_F" },
+		{ 103, "R_1_F" },
+		{ 123, "R_2_F" }
 	};
 
 	const edm::ParameterSet& config = edm::readPSetsFrom(f_in)->getParameter<edm::ParameterSet>("config");
