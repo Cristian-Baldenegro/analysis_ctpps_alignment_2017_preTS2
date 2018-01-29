@@ -51,3 +51,7 @@ eos_dir="/eos/totem/data/ctpps/reconstruction/2017/alignment_run_July/version6"
 GetOne "5912" "140" "DS1" "run_298593"
 GetOne "5912" "130" "DS1" "run_298594\|run_298596"
 GetOne "5912" "120" "DS1" "run_298597"
+
+#top_dir="../data/alig_v5_test"
+#eos_dir="/eos/totem/data/ctpps/reconstruction/2017/alignment_run_July/version5"
+#GetOne "5912" "120" "DS1" "run_298597"
