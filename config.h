@@ -11,9 +11,23 @@ using namespace std;
 
 //----------------------------------------------------------------------------------------------------
 
+struct SelectionRange
+{
+	double x_min;
+	double x_max;
+
+	SelectionRange(double _xmi=0., double _xma=0.) : x_min(_xmi), x_max(_xma)
+	{
+	}
+};
+
+//----------------------------------------------------------------------------------------------------
+
 struct Config
 {
 	vector<string> input_files;
+
+	bool aligned;
 
 	double n_si;
 
@@ -27,6 +41,11 @@ struct Config
 	bool cut3_apply;
 	bool cut4_apply;
 
+	vector<string> matching_1d_reference_datasets;
+
+	map<unsigned int, SelectionRange> matching_1d_ranges;
+	map<unsigned int, SelectionRange> matching_1d_shift_ranges;
+
 	int LoadFrom(const string &f);
 };
 
@@ -34,31 +53,54 @@ struct Config
 
 int Config::LoadFrom(const string &f_in)
 {
-	const edm::ParameterSet& process = edm::readPSetsFrom(f_in)->getParameter<edm::ParameterSet>("config");
+	const edm::ParameterSet& config = edm::readPSetsFrom(f_in)->getParameter<edm::ParameterSet>("config");
 
-	input_files = process.getParameter<vector<string>>("input_files");
+	input_files = config.getParameter<vector<string>>("input_files");
+
+	aligned = config.getParameter<bool>("aligned");
 	
-	n_si = process.getParameter<double>("n_si");
+	n_si = config.getParameter<double>("n_si");
 
-	cut1_apply = process.getParameter<bool>("cut1_apply");
-	cut1_a = process.getParameter<double>("cut1_a");
-	cut1_c = process.getParameter<double>("cut1_c");
-	cut1_si = process.getParameter<double>("cut1_si");
+	cut1_apply = config.getParameter<bool>("cut1_apply");
+	cut1_a = config.getParameter<double>("cut1_a");
+	cut1_c = config.getParameter<double>("cut1_c");
+	cut1_si = config.getParameter<double>("cut1_si");
 
-	cut2_apply = process.getParameter<bool>("cut2_apply");
-	cut2_a = process.getParameter<double>("cut2_a");
-	cut2_c = process.getParameter<double>("cut2_c");
-	cut2_si = process.getParameter<double>("cut2_si");
+	cut2_apply = config.getParameter<bool>("cut2_apply");
+	cut2_a = config.getParameter<double>("cut2_a");
+	cut2_c = config.getParameter<double>("cut2_c");
+	cut2_si = config.getParameter<double>("cut2_si");
 
-	cut3_apply = process.getParameter<bool>("cut3_apply");
-	cut3_a = process.getParameter<double>("cut3_a");
-	cut3_c = process.getParameter<double>("cut3_c");
-	cut3_si = process.getParameter<double>("cut3_si");
+	cut3_apply = config.getParameter<bool>("cut3_apply");
+	cut3_a = config.getParameter<double>("cut3_a");
+	cut3_c = config.getParameter<double>("cut3_c");
+	cut3_si = config.getParameter<double>("cut3_si");
 
-	cut4_apply = process.getParameter<bool>("cut4_apply");
-	cut4_a = process.getParameter<double>("cut4_a");
-	cut4_c = process.getParameter<double>("cut4_c");
-	cut4_si = process.getParameter<double>("cut4_si");
+	cut4_apply = config.getParameter<bool>("cut4_apply");
+	cut4_a = config.getParameter<double>("cut4_a");
+	cut4_c = config.getParameter<double>("cut4_c");
+	cut4_si = config.getParameter<double>("cut4_si");
+
+	{
+		const auto &c_m1d = config.getParameter<edm::ParameterSet>("matching_1d");
+		matching_1d_reference_datasets = c_m1d.getParameter<vector<string>>("reference_datasets");
+
+		const auto &c_m1d_L_2_F = c_m1d.getParameter<edm::ParameterSet>("rp_L_2_F");
+		matching_1d_ranges[3] = SelectionRange(c_m1d_L_2_F.getParameter<double>("x_min"), c_m1d_L_2_F.getParameter<double>("x_max"));
+		matching_1d_shift_ranges[3] = SelectionRange(c_m1d_L_2_F.getParameter<double>("sh_min"), c_m1d_L_2_F.getParameter<double>("sh_max"));
+
+		const auto &c_m1d_L_1_F = c_m1d.getParameter<edm::ParameterSet>("rp_L_1_F");
+		matching_1d_ranges[2] = SelectionRange(c_m1d_L_1_F.getParameter<double>("x_min"), c_m1d_L_1_F.getParameter<double>("x_max"));
+		matching_1d_shift_ranges[2] = SelectionRange(c_m1d_L_1_F.getParameter<double>("sh_min"), c_m1d_L_1_F.getParameter<double>("sh_max"));
+
+		const auto &c_m1d_R_1_F = c_m1d.getParameter<edm::ParameterSet>("rp_R_1_F");
+		matching_1d_ranges[102] = SelectionRange(c_m1d_R_1_F.getParameter<double>("x_min"), c_m1d_R_1_F.getParameter<double>("x_max"));
+		matching_1d_shift_ranges[102] = SelectionRange(c_m1d_R_1_F.getParameter<double>("sh_min"), c_m1d_R_1_F.getParameter<double>("sh_max"));
+
+		const auto &c_m1d_R_2_F = c_m1d.getParameter<edm::ParameterSet>("rp_R_2_F");
+		matching_1d_ranges[103] = SelectionRange(c_m1d_R_2_F.getParameter<double>("x_min"), c_m1d_R_2_F.getParameter<double>("x_max"));
+		matching_1d_shift_ranges[103] = SelectionRange(c_m1d_R_2_F.getParameter<double>("sh_min"), c_m1d_R_2_F.getParameter<double>("sh_max"));
+	}
 
 	return 0;
 }
