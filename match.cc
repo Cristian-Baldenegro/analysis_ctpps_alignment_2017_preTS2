@@ -431,6 +431,10 @@ int main()
 		return 1;
 	}
 
+	printf("-------------------- config ----------------------\n");
+	cfg.Print(false);
+	printf("--------------------------------------------------\n");
+
 	// list of RPs and their settings
 	struct RPData
 	{

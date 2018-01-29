@@ -121,11 +121,11 @@ int main()
 		return 1;
 	}
 
-	// setup input
-	printf("* input files\n");
-	for (const auto &f : cfg.input_files)
-		printf("    %s\n", f.c_str());
+	printf("-------------------- config ----------------------\n");
+	cfg.Print(true);
+	printf("--------------------------------------------------\n");
 
+	// setup input
 	fwlite::ChainEvent ev(cfg.input_files);
 
 	printf("* events in input chain: %llu\n", ev.size());
@@ -197,7 +197,7 @@ int main()
 		ev_count++;
 
 		// TODO: comment out
-		if (tr_sel_count > 1000000)
+		if (tr_sel_count > 10000)
 			break;
 
 		// default track data
@@ -223,6 +223,8 @@ int main()
 			if (rpDecId == 123)
 				tr_R_2_F = tr;
 		}
+
+		// TODO: apply alignment corrections
 
 		bool tr_L_2_F_valid = (tr_L_2_F.getRPId() != 0);
 		bool tr_L_1_F_valid = (tr_L_1_F.getRPId() != 0);
