@@ -121,13 +121,13 @@ void BuildStdDevProfile(TGraph *g_input, double x_shift, const SelectionRange &r
 //----------------------------------------------------------------------------------------------------
 
 void DoMatchMethodX(TGraph *g_test, const SelectionRange &r_test, TGraph *g_ref, const SelectionRange &r_ref, double sh_min, double sh_max,
-		double &result)
+		double &result, int bin_number)
 {
 	printf("        test range: %.3f to %.3f\n", r_test.x_min, r_test.x_max);
 	printf("        ref range: %.3f to %.3f\n", r_ref.x_min, r_ref.x_max);
 
 	// prepare reference histogram
-	TH1D *h_ref = new TH1D("h_ref", ";x", 140, 2., 16.);
+	TH1D *h_ref = new TH1D("h_ref", ";x",  bin_number, 2., 16.);
 	BuildHistogram(g_ref, 0., r_ref, h_ref);
 
 	// book match-quality graphs
@@ -395,21 +395,24 @@ void DoMatchMethodY(TGraph *g_test, const SelectionRange &r_test, TGraph *g_ref,
 
 //----------------------------------------------------------------------------------------------------
 
-void DoMatch(unsigned int /*rpId*/,
+void DoMatch(unsigned int rpId,
 		TGraph *g_test, const SelectionRange &r_test, TGraph *g_ref, const SelectionRange &r_ref,
 		double sh_min, double sh_max,
 		double &r_method_x, double &r_method_y)
 {
 	TDirectory *d_top = gDirectory;
-
+	int bin_number = 140;
 	// method x
-	r_method_x = 0.;
-	/*
 	gDirectory = d_top->mkdir("method x");
 	printf("    method x\n");
 	SelectionRange r_test_x = r_test;
-	DoMatchMethodX(g_test, r_test_x, g_ref, r_ref, sh_min, sh_max, r_method_x);
-	*/
+        if( rpId == 3) {r_test_x.x_min = 7.45; r_test_x.x_max= 12.;}
+        else if( rpId == 23) {r_test_x.x_min = 45.95; r_test_x.x_max = 51.; bin_number = 98;}
+        else if( rpId == 103){r_test_x.x_min = 5.5; r_test_x.x_max = 10.5;}
+        else if( rpId == 123) {r_test_x.x_min = 44.8; r_test_x.x_max= 49.8; bin_number = 98;}
+
+	DoMatchMethodX(g_test, r_test_x, g_ref, r_ref, sh_min, sh_max, r_method_x, bin_number);
+	
 
 	// method y
 	gDirectory = d_top->mkdir("method y");
